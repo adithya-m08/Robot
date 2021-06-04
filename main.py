@@ -11,7 +11,9 @@ Ser.flush()
 
 while True:
     ret, frame = cap.read()
-
+    if not ret:
+        _,frame=cap.read()
+        
     frame = cv2.flip(frame, 1)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     kernel = np.ones((5, 5), np.uint8)
@@ -47,16 +49,16 @@ while True:
         data=data.split(' - ')[1]
         if(data=='right'):
             print("shift-right")
+            #addcommands
         elif(data=='left'):
             print("shift-left")
-        elif(data=='opposite')
+            #addcommands
+        elif(data=='opposite'):
             print("shift-opposite")
+            #addcommands
+
     cv2.imshow("Frame", frame)
-    
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
         cv2.destroyAllWindows()
         break
-
-cap.release()
-cv2.destroyAllWindows()
