@@ -5,17 +5,53 @@ import serial
 
 cap = cv2.VideoCapture(0)
 linecolor = (100, 215, 255)
-lwr_red = np.array([  9, 206, 142])
+lwr_red = np.array([9, 206, 142])
 upper_red = np.array([ 29, 226 ,222])
-Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
+Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
+
+def laneShift(dir):
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            _,frame=cap.read()
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.inRange(hsv, lwr_red, upper_red)
+        mask = cv2.dilate(mask, kernel, iterations=1)
+        res = cv2.bitwise_and(frame, frame, mask=mask)
+        cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        center = None
+
+        Ser.write(b'f')
+
+        if len(cnts) > 0: #keep robot moving front regardless of len(cnts) value after turning
+            c = max(cnts, key=cv2.contourArea)
+            ((x, y), radius) = cv2.minEnclosingCircle(c)
+            M = cv2.moments(c)
+            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+            if radius > 2:
+                cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
+                cv2.circle(frame, center, 2, linecolor, -1)
+            
+            if y > 450:
+                #move a bit more then stop
+                if(dir == 'r'):
+                    #turn 90 degrees anticlock and resume
+                    #Ser.write(b'l')
+                    pass
+                    return
+                elif(dir == 'l'):
+                    #turn 90 degrees clock and resume
+                    #Ser.write(b'r')
+                    pass
+                    return
 
 while True:
     ret, frame = cap.read()
     if not ret:
         _,frame=cap.read()
         
-    frame = cv2.flip(frame, 1)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     kernel = np.ones((5, 5), np.uint8)
     mask = cv2.inRange(hsv, lwr_red, upper_red)
@@ -50,13 +86,19 @@ while True:
         data=data.split(' - ')[1]
         if(data=='right'):
             print("shift-right")
-            #addcommands
+            #turn 90 degrees clock
+            #Ser.write(b'r')
+            laneShift('r')
+            
         elif(data=='left'):
             print("shift-left")
-            #addcommands
+            #turn 90 degrees anticlock
+            #Ser.write(b'l')
+            laneShift('l')
+
         elif(data=='opposite'):
             print("shift-opposite")
-            #addcommands
+            # add commands here
 
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
