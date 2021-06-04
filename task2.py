@@ -5,8 +5,8 @@ import serial
 
 cap = cv2.VideoCapture(0)
 linecolor = (100, 215, 255)
-lwr_red = np.array([9, 206, 142])
-upper_red = np.array([ 29, 226 ,222])
+lwr_red = np.array([7, 245, 132])
+upper_red = np.array([27, 255, 212])
 Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
 
@@ -15,6 +15,7 @@ def laneShift(dir):
         ret, frame = cap.read()
         if not ret:
             _,frame=cap.read()
+        cv2.imshow('Shifting',frame)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         kernel = np.ones((5, 5), np.uint8)
         mask = cv2.inRange(hsv, lwr_red, upper_red)
@@ -23,7 +24,7 @@ def laneShift(dir):
         cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         center = None
 
-        Ser.write(b'f')
+        Ser.write(b'F')
 
         if len(cnts) > 0: #keep robot moving front regardless of len(cnts) value after turning
             c = max(cnts, key=cv2.contourArea)
@@ -39,19 +40,24 @@ def laneShift(dir):
                 if(dir == 'r'):
                     #turn 90 degrees anticlock and resume
                     #Ser.write(b'l')
-                    pass
+                    cv2.destroyWindow("Shifting")
                     return
                 elif(dir == 'l'):
                     #turn 90 degrees clock and resume
                     #Ser.write(b'r')
-                    pass
+                    cv2.destroyWindow("Shifting")
                     return
+                    
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            cap.release()
+            cv2.destroyWindow("Shifting")
+            break
 
 while True:
     ret, frame = cap.read()
     if not ret:
         _,frame=cap.read()
-        
+
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     kernel = np.ones((5, 5), np.uint8)
     mask = cv2.inRange(hsv, lwr_red, upper_red)
@@ -81,7 +87,7 @@ while True:
             print("F")
             Ser.write(b"F")
         
-    data,_,_=cv2.QRCodeDetector().detectAndDecode(cv2.flip(frame, 1))
+    data,_,_=cv2.QRCodeDetector().detectAndDecode(frame)
     if data!='':
         data=data.split(' - ')[1]
         if(data=='right'):
