@@ -1,4 +1,3 @@
-#change F to f
 import numpy as np
 import cv2
 import serial
@@ -7,6 +6,14 @@ cap = cv2.VideoCapture(0)
 linecolor = (100, 215, 255)
 lwr_red = np.array([7, 245, 132])
 upper_red = np.array([27, 255, 212])
+lwr_black = np.array([0,0,0])
+upper_black = np.array([10,10,40])
+lwr_violet = np.array([120,71,53])
+upper_violet = np.array([146,166,243])
+lwr_pink = np.array([152,86,171])
+upper_pink = np.array([183,264,289])
+
+
 Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
 
@@ -26,7 +33,7 @@ def laneShift(dir):
 
         Ser.write(b'F')
 
-        if len(cnts) > 0: #keep robot moving front regardless of len(cnts) value after turning
+        if len(cnts) > 0:
             c = max(cnts, key=cv2.contourArea)
             ((x, y), radius) = cv2.minEnclosingCircle(c)
             M = cv2.moments(c)
@@ -37,6 +44,7 @@ def laneShift(dir):
             
             if y > 450:
                 #move a bit more then stop
+                #Ser.write(b'f')
                 if(dir == 'r'):
                     #turn 90 degrees anticlock and resume
                     #Ser.write(b'l')
@@ -53,6 +61,7 @@ def laneShift(dir):
             cv2.destroyWindow("Shifting")
             break
 
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -66,6 +75,7 @@ while True:
     cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     center = None
     
+
     if len(cnts) > 0:
         c = max(cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
@@ -86,25 +96,27 @@ while True:
         else:
             print("F")
             Ser.write(b"F")
-        
-    data,_,_=cv2.QRCodeDetector().detectAndDecode(frame)
-    if data!='':
-        data=data.split(' - ')[1]
-        if(data=='right'):
-            print("shift-right")
-            #turn 90 degrees clock
-            #Ser.write(b'r')
-            laneShift('r')
-            
-        elif(data=='left'):
-            print("shift-left")
-            #turn 90 degrees anticlock
-            #Ser.write(b'l')
-            laneShift('l')
 
-        elif(data=='opposite'):
-            print("shift-opposite")
-            # add commands here
+    else:
+        print("Track Not Visible")
+
+
+
+    black_mask = cv2.inRange(hsv, lwr_black, upper_black)
+    violet_mask = cv2.inRange(hsv, lwr_violet, upper_violet)
+    pink_mask = cv2.inRange(hsv, lwr_pink, upper_pink)
+
+
+    if(cv2.countNonZero(black_mask)>2000000000000):
+        print("shift-right")
+        laneShift('r')
+    elif(cv2.countNonZero(violet_mask)>200):
+        print("shift-left")
+        laneShift('l')
+    elif(cv2.countNonZero(pink_mask)>200):
+        print("shift-opposite")
+        #commands to move to the center
+
 
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):

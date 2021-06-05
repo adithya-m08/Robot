@@ -1,18 +1,19 @@
 import numpy as np
 import cv2
 import serial
+import time
 
 thres = 0.45
 nms_threshold = 0.2
 cap = cv2.VideoCapture(0)
-stop='no'
+flag,object=0,None
 
 configPath = 'resources\\config.pbtxt'
 weightsPath = 'resources\\weights.pb'
 
 linecolor = (100, 215, 255)
-lwr_red = np.array([  9, 206, 142])
-upper_red = np.array([ 29, 226 ,222])
+lwr_red = np.array([9, 206, 142])
+upper_red = np.array([29, 226 ,222])
 
 classNames= []
 classFile = 'resources\\object.names'
@@ -29,21 +30,22 @@ Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
 
 while True:
-        ret, frame = cap.read()
-        if not ret:
-            _,frame=cap.read()
-        objects,_,_=cv2.QRCodeDetector().detectAndDecode(frame)
-        
-        if objects!='':
-            objects=list(map(str.strip,objects.split(',')))
-            cv2.destroyWindow("QR")
-            break
+    ret, frame = cap.read()
+    if not ret:
+        _,frame=cap.read()
 
-        cv2.imshow("QR",frame)
+    objects,_,_=cv2.QRCodeDetector().detectAndDecode(frame)
+    
+    if objects!='':
+        objects=list(map(str.strip,objects.split(',')))
+        cv2.destroyWindow("QR")
+        break
 
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            cv2.destroyWindow("QR")
-            break
+    cv2.imshow("QR",frame)
+
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+        cv2.destroyWindow("QR")
+        break
 
 print(objects)
 
@@ -60,7 +62,7 @@ while True:
     cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     center = None
     
-    if len(cnts) > 0:
+    if(len(cnts) > 0 and flag==0):
         c = max(cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
@@ -71,19 +73,20 @@ while True:
             
         if(x < 280):
             print("L")
-            #Ser.write(b"l")
+            Ser.write(b"L")
         elif(x > 320):
             print("R")
-            #Ser.write(b"r")
+            Ser.write(b"R")
         else:
             print("F")
-            #Ser.write(b"f")
+            Ser.write(b"F")
     
-    if(Ser.in_waiting):
-        stop=Ser.readline.decode().strip()
+    if(Ser.in_waiting and flag!=1):
+        flag=int(Ser.readline().decode().strip())
     
-    if(stop=='yes'):
-        Ser.write(b'llll')
+    if(flag==1):
+        #Ser.write(b'llll')
+
         classIds, confs, bbox = net.detect(frame,confThreshold=thres)
         bbox = list(bbox)
         confs = list(np.array(confs).reshape(1,-1)[0])
@@ -91,20 +94,24 @@ while True:
         indices = cv2.dnn.NMSBoxes(bbox,confs,thres,nms_threshold)
 
         for i in indices:
-            i = i[0]
-            #box = bbox[i]
-            #x,y,w,h = box[0],box[1],box[2],box[3]
-            #cv2.rectangle(frame, (x,y),(x+w,h+y), color=(0, 255, 0), thickness=2)
-            #cv2.putText(frame,classNames[classIds[i][0]-1].upper(),(box[0]+10,box[1]+30),
-            #cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)    
+            i = i[0]  
             object=classNames[classIds[i][0]-1]    
 
-            if(object in objects):
+            if(object in objects and object!='person'):
                 print('Found',object)
-                stop='no'
+
+            elif(object=='person'):
+                print('Loaded')
+                #time.sleep(5)
+                #Ser.write(b"rrrr")
+                flag=0
+                break
+            
 
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
+        Ser.write(b"S")
+        Ser.close()
         cv2.destroyAllWindows()
         break
