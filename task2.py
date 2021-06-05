@@ -14,7 +14,7 @@ lwr_pink = np.array([152,86,171])
 upper_pink = np.array([183,264,289])
 
 
-Ser = serial.Serial("COM4", baudrate=9600)
+Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
 Ser.flush()
 
 def laneShift(dir):
@@ -31,7 +31,7 @@ def laneShift(dir):
         cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         center = None
 
-        Ser.write(b'F')
+        Ser.write(b'f')
 
         if len(cnts) > 0:
             c = max(cnts, key=cv2.contourArea)
@@ -87,15 +87,15 @@ while True:
             
         if(x < 280):
             print("L")
-            Ser.write(b"L")
+            Ser.write(b"l")
 
         elif(x > 320):
             print("R")
-            Ser.write(b"R")
+            Ser.write(b"r")
 
         else:
             print("F")
-            Ser.write(b"F")
+            Ser.write(b"f")
 
     else:
         print("Track Not Visible")

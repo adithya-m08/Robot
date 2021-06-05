@@ -6,7 +6,7 @@ cap = cv2.VideoCapture(0)
 linecolor = (100, 215, 255)
 lwr_red = np.array([7, 245, 132])
 upper_red = np.array([27, 255, 212])
-Ser = serial.Serial("COM4", baudrate=9600)
+Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
 Ser.flush()
 
 while True:
@@ -33,15 +33,15 @@ while True:
             
         if(x < 280):
             print("L")
-            Ser.write(b"L")
+            Ser.write(b"l")
 
         elif(x > 320):
             print("R")
-            Ser.write(b"R")
+            Ser.write(b"r")
 
         else:
             print("F")
-            Ser.write(b"F")
+            Ser.write(b"f")
 
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):

@@ -26,7 +26,7 @@ net.setInputScale(1.0/ 127.5)
 net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
 
-Ser = serial.Serial("COM4", baudrate=9600)
+Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
 Ser.flush()
 
 ##### QR Code Detection #####
@@ -77,13 +77,13 @@ while True:
             
         if(x < 280):
             print("L")
-            Ser.write(b"L")
+            Ser.write(b"l")
         elif(x > 320):
             print("R")
-            Ser.write(b"R")
+            Ser.write(b"r")
         else:
             print("F")
-            Ser.write(b"F")
+            Ser.write(b"f")
     
     if(Ser.in_waiting and flag!=1):
         flag=int(Ser.readline().decode().strip())
@@ -116,7 +116,7 @@ while True:
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
-        Ser.write(b"S")
+        Ser.write(b"s")
         Ser.close()
         cv2.destroyAllWindows()
         break
