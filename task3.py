@@ -29,6 +29,8 @@ net.setInputSwapRB(True)
 Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
 
+##### QR Code Detection #####
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -48,6 +50,8 @@ while True:
         break
 
 print(objects)
+
+#### Navigation and Object Detection ####
 
 while True:
     ret, frame = cap.read()
@@ -86,6 +90,7 @@ while True:
     
     if(flag==1):
         #Ser.write(b'llll')
+        print("Waiting for Object")
 
         classIds, confs, bbox = net.detect(frame,confThreshold=thres)
         bbox = list(bbox)
