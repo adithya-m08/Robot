@@ -1,11 +1,12 @@
 import numpy as np
 import cv2
 import serial
+import time
 
 cap = cv2.VideoCapture(0)
 linecolor = (100, 215, 255)
-lwr_red = np.array([7, 245, 132])
-upper_red = np.array([27, 255, 212])
+lwr_red = np.array([7, 245,132])
+upper_red = np.array([27, 255,212])
 Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
 Ser.flush()
 
@@ -31,11 +32,11 @@ while True:
             cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
             cv2.circle(frame, center, 5, linecolor, -1)
             
-        if(x < 280):
+        if(x < 200):
             print("L")
             Ser.write(b"l")
 
-        elif(x > 320):
+        elif(x > 400):
             print("R")
             Ser.write(b"r")
 

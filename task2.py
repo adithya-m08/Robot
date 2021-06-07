@@ -1,7 +1,9 @@
 import numpy as np
 import cv2
 import serial
+import time
 
+flag=0
 cap = cv2.VideoCapture(0)
 linecolor = (100, 215, 255)
 lwr_red = np.array([7, 245, 132])
@@ -47,13 +49,17 @@ def laneShift(dir):
                 #Ser.write(b'f')
                 if(dir == 'r'):
                     #turn 90 degrees anticlock and resume
-                    #Ser.write(b'l')
+                    print("Found Line")
+                    Ser.write(b'llllllllllllllll')
                     cv2.destroyWindow("Shifting")
+                    flag=0
                     return
                 elif(dir == 'l'):
                     #turn 90 degrees clock and resume
-                    #Ser.write(b'r')
+                    print("Found Line")
+                    Ser.write(b'rrrrrrrrrrrrrrrr')
                     cv2.destroyWindow("Shifting")
+                    flag=0
                     return
                     
         if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -76,7 +82,7 @@ while True:
     center = None
     
 
-    if len(cnts) > 0:
+    if( len(cnts) > 0):
         c = max(cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
@@ -85,11 +91,11 @@ while True:
             cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
             cv2.circle(frame, center, 5, linecolor, -1)
             
-        if(x < 280):
+        if(x < 250):
             print("L")
             Ser.write(b"l")
 
-        elif(x > 320):
+        elif(x > 300):
             print("R")
             Ser.write(b"r")
 
@@ -107,14 +113,30 @@ while True:
     pink_mask = cv2.inRange(hsv, lwr_pink, upper_pink)
 
 
-    if(cv2.countNonZero(black_mask)>2000000000000):
+    if(cv2.countNonZero(black_mask)>200000000000000000000000000 and flag==0):
+        flag=1
         print("shift-right")
-        laneShift('r')
-    elif(cv2.countNonZero(violet_mask)>200):
+        Ser.write(b'rrrrrrrrrrrrrrrr')
+        time.sleep(2)
+        Ser.write(b'ff')
+        time.sleep(2)
+        Ser.write(b'llllllllllllllll')
+        time.sleep(2)
+        #laneShift('r')
+    elif(cv2.countNonZero(violet_mask)>20000 and flag==0):
+        flag=1
         print("shift-left")
-        laneShift('l')
-    elif(cv2.countNonZero(pink_mask)>200):
+        Ser.write(b'llllllllllllllll')
+        time.sleep(2)
+        Ser.write(b'ff')
+        time.sleep(2)
+        Ser.write(b'rrrrrrrrrrrrrrrr')
+        time.sleep(2)
+        #laneShift('l')
+    elif(cv2.countNonZero(pink_mask)>20000):
         print("shift-opposite")
+        Ser.write(b'llllllllllllllll')
+        Ser.write(b'fffffff')
         #commands to move to the center
 
 
