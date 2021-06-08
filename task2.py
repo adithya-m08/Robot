@@ -69,31 +69,25 @@ while True:
     if(cv2.countNonZero(green_mask)/(width*height)>0.3 and flag==0):
         flag=1
         print("shift-right")
-        Ser.write(b'rrrrrrrrrrrrrrrr')
-        time.sleep(1)
-        Ser.write(b'ff')
-        time.sleep(1)
-        Ser.write(b'llllllllllllllll')
+        Ser.write(b'rrrrrfffffffflllll')
         time.sleep(1)
         flag=0
+
     elif(cv2.countNonZero(violet_mask)/(width*height)>0.3 and flag==0):
         flag=1
         print("shift-left")
-        Ser.write(b'llllllllllllllll')
-        time.sleep(1)
-        Ser.write(b'ff')
-        time.sleep(1)
-        Ser.write(b'rrrrrrrrrrrrrrrr')
+        Ser.write(b'lllllffffffffrrrrr')
         time.sleep(1)
         flag=0
+
     elif(cv2.countNonZero(pink_mask)/(width*height)>0.3 and flag==0):
         flag=1
         print("shift-opposite")
         Ser.write(b'llllllllllllllll')
-        time.sleep(1)
-        Ser.write(b'fffffff')
+        Ser.write(b'ffffffffff')
         time.sleep(1)
         flag=0
+
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()

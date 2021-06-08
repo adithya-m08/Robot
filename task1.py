@@ -4,12 +4,15 @@ import serial
 import time
 
 cap = cv2.VideoCapture(0)
+
 linecolor = (100, 215, 255)
 lwr_red = np.array([7, 245,132])
 upper_red = np.array([27, 255,212])
+
 Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
 width=cap.get(3)
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -43,6 +46,8 @@ while True:
         else:
             print("F")
             Ser.write(b"f")
+    else:
+        print("Track Not Visible")
 
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
