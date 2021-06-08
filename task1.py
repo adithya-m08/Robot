@@ -7,9 +7,9 @@ cap = cv2.VideoCapture(0)
 linecolor = (100, 215, 255)
 lwr_red = np.array([7, 245,132])
 upper_red = np.array([27, 255,212])
-Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
+Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
-
+width=cap.get(3)
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -29,14 +29,14 @@ while True:
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
         if radius > 3:
-            cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
+            #cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
             cv2.circle(frame, center, 5, linecolor, -1)
             
-        if(x < 200):
+        if(x < 0.25*width):
             print("L")
             Ser.write(b"l")
 
-        elif(x > 400):
+        elif(x > 0.75*width):
             print("R")
             Ser.write(b"r")
 

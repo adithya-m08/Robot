@@ -5,68 +5,25 @@ import time
 
 flag=0
 cap = cv2.VideoCapture(0)
+width=cap.get(3)
+height=cap.get(4)
+
 linecolor = (100, 215, 255)
+
 lwr_red = np.array([7, 245, 132])
 upper_red = np.array([27, 255, 212])
-lwr_black = np.array([0,0,0])
-upper_black = np.array([10,10,40])
+
+lwr_green = np.array([68, 142, 74])
+upper_green = np.array([88, 162, 154])
+
 lwr_violet = np.array([120,230,49])
 upper_violet = np.array([146,255,129])
+
 lwr_pink = np.array([152,86,171])
 upper_pink = np.array([183,264,289])
 
-
-Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
+Ser = serial.Serial("COM4", baudrate=9600)
 Ser.flush()
-
-def laneShift(dir):
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            _,frame=cap.read()
-        cv2.imshow('Shifting',frame)
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        kernel = np.ones((5, 5), np.uint8)
-        mask = cv2.inRange(hsv, lwr_red, upper_red)
-        mask = cv2.dilate(mask, kernel, iterations=1)
-        res = cv2.bitwise_and(frame, frame, mask=mask)
-        cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-        center = None
-
-        Ser.write(b'f')
-
-        if len(cnts) > 0:
-            c = max(cnts, key=cv2.contourArea)
-            ((x, y), radius) = cv2.minEnclosingCircle(c)
-            M = cv2.moments(c)
-            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-            if radius > 2:
-                cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
-                cv2.circle(frame, center, 2, linecolor, -1)
-            
-            if y > 450:
-                #move a bit more then stop
-                #Ser.write(b'f')
-                if(dir == 'r'):
-                    #turn 90 degrees anticlock and resume
-                    print("Found Line")
-                    Ser.write(b'llllllllllllllll')
-                    cv2.destroyWindow("Shifting")
-                    flag=0
-                    return
-                elif(dir == 'l'):
-                    #turn 90 degrees clock and resume
-                    print("Found Line")
-                    Ser.write(b'rrrrrrrrrrrrrrrr')
-                    cv2.destroyWindow("Shifting")
-                    flag=0
-                    return
-                    
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            cap.release()
-            cv2.destroyWindow("Shifting")
-            break
-
 
 while True:
     ret, frame = cap.read()
@@ -82,20 +39,19 @@ while True:
     center = None
     
 
-    if( len(cnts) > 0):
+    if( len(cnts) > 0 and flag!=1):
         c = max(cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
         if radius > 3:
-            cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
             cv2.circle(frame, center, 5, linecolor, -1)
             
-        if(x < 250):
+        if(x < 0.25*width):
             print("L")
             Ser.write(b"l")
 
-        elif(x > 300):
+        elif(x > 0.75*width):
             print("R")
             Ser.write(b"r")
 
@@ -106,40 +62,38 @@ while True:
     else:
         print("Track Not Visible")
 
-
-
-    black_mask = cv2.inRange(hsv, lwr_black, upper_black)
+    green_mask = cv2.inRange(hsv, lwr_green, upper_green)
     violet_mask = cv2.inRange(hsv, lwr_violet, upper_violet)
     pink_mask = cv2.inRange(hsv, lwr_pink, upper_pink)
 
-
-    if(cv2.countNonZero(black_mask)>200000000000000000000000000 and flag==0):
+    if(cv2.countNonZero(green_mask)/(width*height)>0.3 and flag==0):
         flag=1
         print("shift-right")
         Ser.write(b'rrrrrrrrrrrrrrrr')
-        time.sleep(2)
+        time.sleep(1)
         Ser.write(b'ff')
-        time.sleep(2)
+        time.sleep(1)
         Ser.write(b'llllllllllllllll')
-        time.sleep(2)
-        #laneShift('r')
-    elif(cv2.countNonZero(violet_mask)>20000 and flag==0):
+        time.sleep(1)
+        flag=0
+    elif(cv2.countNonZero(violet_mask)/(width*height)>0.3 and flag==0):
         flag=1
         print("shift-left")
         Ser.write(b'llllllllllllllll')
-        time.sleep(2)
+        time.sleep(1)
         Ser.write(b'ff')
-        time.sleep(2)
+        time.sleep(1)
         Ser.write(b'rrrrrrrrrrrrrrrr')
-        time.sleep(2)
-        #laneShift('l')
-    elif(cv2.countNonZero(pink_mask)>20000):
+        time.sleep(1)
+        flag=0
+    elif(cv2.countNonZero(pink_mask)/(width*height)>0.3 and flag==0):
+        flag=1
         print("shift-opposite")
         Ser.write(b'llllllllllllllll')
+        time.sleep(1)
         Ser.write(b'fffffff')
-        #commands to move to the center
-
-
+        time.sleep(1)
+        flag=0
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
