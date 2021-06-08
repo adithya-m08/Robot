@@ -16,13 +16,13 @@ upper_red = np.array([27, 255, 212])
 lwr_green = np.array([68, 142, 74])
 upper_green = np.array([88, 162, 154])
 
-lwr_violet = np.array([120,230,49])
-upper_violet = np.array([146,255,129])
+lwr_violet = np.array([108,229,66])
+upper_violet = np.array([130,255,162])
 
-lwr_pink = np.array([152,86,171])
-upper_pink = np.array([183,264,289])
+lwr_pink = np.array([152,75,197])
+upper_pink = np.array([185,123,285])
 
-Ser = serial.Serial("COM4", baudrate=9600)
+Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
 Ser.flush()
 
 while True:
@@ -39,7 +39,7 @@ while True:
     center = None
     
 
-    if( len(cnts) > 0 and flag!=1):
+    if( len(cnts) > 0):
         c = max(cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
@@ -66,27 +66,25 @@ while True:
     violet_mask = cv2.inRange(hsv, lwr_violet, upper_violet)
     pink_mask = cv2.inRange(hsv, lwr_pink, upper_pink)
 
-    if(cv2.countNonZero(green_mask)/(width*height)>0.3 and flag==0):
+    if(cv2.countNonZero(green_mask)>1000 and flag==0):
         flag=1
         print("shift-right")
-        Ser.write(b'rrrrrfffffffflllll')
-        time.sleep(1)
-        flag=0
+        Ser.write(b'rrrrrrrrfffffffffffffffffffffllllllll')
+        time.sleep(5)
 
-    elif(cv2.countNonZero(violet_mask)/(width*height)>0.3 and flag==0):
+    elif(cv2.countNonZero(violet_mask)>200 and flag==0):
         flag=1
         print("shift-left")
-        Ser.write(b'lllllffffffffrrrrr')
-        time.sleep(1)
-        flag=0
+        Ser.write(b'llllllllfffffffffffffrrrrrrrrrrrr')
+        time.sleep(5)
+        
 
-    elif(cv2.countNonZero(pink_mask)/(width*height)>0.3 and flag==0):
+    elif(cv2.countNonZero(pink_mask)>50 and flag==0):
         flag=1
         print("shift-opposite")
-        Ser.write(b'llllllllllllllll')
-        Ser.write(b'ffffffffff')
-        time.sleep(1)
-        flag=0
+        Ser.write(b'fffffffffllllllllllllllllffffffffffffffffffffffffffrrr')
+        time.sleep(5)
+        break
 
     cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
