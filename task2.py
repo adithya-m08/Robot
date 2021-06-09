@@ -39,7 +39,7 @@ while True:
     res = cv2.bitwise_and(frame, frame, mask=mask)
     cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
 
-    if( len(cnts) > 0 and flag!=1):
+    if( len(cnts) > 0):
         c = max(cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
@@ -66,27 +66,25 @@ while True:
     violet_mask = cv2.inRange(hsv, lwr_violet, upper_violet)
     pink_mask = cv2.inRange(hsv, lwr_pink, upper_pink)
 
-    if(cv2.countNonZero(green_mask)/(width*height)>0.3 and flag==0):
+    if(cv2.countNonZero(green_mask)>1000 and flag==0):
         flag=1
         print("shift-right")
-        Ser.write(b'rrrrrfffffffflllll')
-        time.sleep(1)
-        flag=0
+        Ser.write(b'rrrrrrrrfffffffffffffffffffffllllllll')
+        time.sleep(5)
 
-    elif(cv2.countNonZero(violet_mask)/(width*height)>0.3 and flag==0):
+    elif(cv2.countNonZero(violet_mask)>200 and flag==0):
         flag=1
         print("shift-left")
-        Ser.write(b'lllllffffffffrrrrr')
-        time.sleep(1)
-        flag=0
+        Ser.write(b'llllllllfffffffffffffrrrrrrrrrrrr')
+        time.sleep(5)
+        
 
-    elif(cv2.countNonZero(pink_mask)/(width*height)>0.3 and flag==0):
+    elif(cv2.countNonZero(pink_mask)>50 and flag==0):
         flag=1
         print("shift-opposite")
-        Ser.write(b'llllllllllllllll')
-        Ser.write(b'ffffffffff')
-        time.sleep(1)
-        flag=0
+        Ser.write(b'fffffffffllllllllllllllllffffffffffffffffffffffffffrrr')
+        time.sleep(5)
+        break
 
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()

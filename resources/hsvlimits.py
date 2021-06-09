@@ -15,8 +15,8 @@ def pick_color(event,x,y,flags,param):
 def main():
     import sys
     global image_hsv, pixel
-    #kj,image_src=cap.read()
-    image_src=cv2.imread("resources\\black.jpg")
+    kj,image_src=cap.read()
+    #image_src=cv2.imread("resources\\black.jpg")
     image=cv2.GaussianBlur(image_src,(93,93),0)
     cv2.imshow("bgr",image_src)
     cv2.namedWindow('hsv')
