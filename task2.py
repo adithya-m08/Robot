@@ -16,13 +16,13 @@ upper_red = np.array([27, 255, 212])
 lwr_green = np.array([68, 142, 74])
 upper_green = np.array([88, 162, 154])
 
-lwr_violet = np.array([120,230,49])
-upper_violet = np.array([146,255,129])
+lwr_violet = np.array([108,193,52])
+upper_violet = np.array([131,255,159])
 
-lwr_pink = np.array([152,86,171])
-upper_pink = np.array([183,264,289])
+lwr_pink = np.array([161,134,176])
+upper_pink = np.array([179,171,255])
 
-Ser = serial.Serial("COM4", baudrate=9600)
+Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
 Ser.flush()
 
 while True:
@@ -30,14 +30,14 @@ while True:
     if not ret:
         _,frame=cap.read()
 
+    cv2.imshow("Frame", frame)
+
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     kernel = np.ones((5, 5), np.uint8)
     mask = cv2.inRange(hsv, lwr_red, upper_red)
     mask = cv2.dilate(mask, kernel, iterations=1)
     res = cv2.bitwise_and(frame, frame, mask=mask)
     cnts,_=cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-    center = None
-    
 
     if( len(cnts) > 0 and flag!=1):
         c = max(cnts, key=cv2.contourArea)
@@ -88,7 +88,6 @@ while True:
         time.sleep(1)
         flag=0
 
-    cv2.imshow("Frame", frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
         Ser.close()
