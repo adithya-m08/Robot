@@ -70,20 +70,20 @@ while True:
     if(cv2.countNonZero(green_mask)>1000 and flag1==0):
         flag1=1
         print("shift-right")
-        Ser.write(b'rrrrrrrrfffffffffffffffffffffllllllll')
+        Ser.write(b'rrrrrrrrffffffffffffffffllllllll')
         time.sleep(5)
 
     elif(cv2.countNonZero(violet_mask)>1000 and flag2==0):
         flag2=1
         print("shift-left")
-        Ser.write(b'llllllllfffffffffffffrrrrrrrrrrrr')
+        Ser.write(b'llllllllfffffffffrrrrrrrrrrrr')
         time.sleep(5)
         
 
     elif(cv2.countNonZero(pink_mask)>1000 and flag3==0):
         flag3=1
         print("shift-opposite")
-        Ser.write(b'fffffffffllllllllllllllllffffffffffffffffffffffffffrrr')
+        Ser.write(b'fffffffffllllllllllllffffffffffffffffffffffffffrrr')
         time.sleep(5)
         break
 
