@@ -3,14 +3,14 @@ import cv2
 import serial
 import time
 
-flag1,flag2,flag3=0,0,0
+flag1,flag2,flag3,c1=0,0,0,0
 cap = cv2.VideoCapture(0)
 width=cap.get(3)
 height=cap.get(4)
 
 linecolor = (100, 215, 255)
 
-lwr_red = np.array([7, 245, 132])
+lwr_red = np.array([7, 171, 132])
 upper_red = np.array([27, 255, 212])
 
 lwr_green = np.array([68, 142, 74])
@@ -48,20 +48,24 @@ while True:
         if radius > 3:
             cv2.circle(frame, center, 5, linecolor, -1)
             
-        if(x < 0.25*width):
+        if(x <0.2*width):
             print("L")
             Ser.write(b"l")
 
-        elif(x > 0.75*width):
+        elif(x > 0.8*width):
             print("R")
             Ser.write(b"r")
 
         else:
             print("F")
-            Ser.write(b"f")
+            Ser.write(b"ff")
 
     else:
         print("Track Not Visible")
+        c1+=1
+        if(c1==5):
+            Ser.write(b'b')
+            c1=0
 
     green_mask = cv2.inRange(hsv, lwr_green, upper_green)
     violet_mask = cv2.inRange(hsv, lwr_violet, upper_violet)
@@ -70,20 +74,22 @@ while True:
     if(cv2.countNonZero(green_mask)>1000 and flag1==0):
         flag1=1
         print("shift-right")
-        Ser.write(b'rrrrrrrrffffffffffffffffllllllll')
+        #time.sleep(1)
+        Ser.write(b'rrrrrrffffffffffffffffflllllllll')
         time.sleep(5)
 
     elif(cv2.countNonZero(violet_mask)>1000 and flag2==0):
         flag2=1
         print("shift-left")
-        Ser.write(b'llllllllfffffffffrrrrrrrrrrrr')
-        time.sleep(5)
+        #time.sleep(1)
+        Ser.write(b'llllllllllffffffffffffrrrrrrrrr')
+        time.sleep(4)
         
 
     elif(cv2.countNonZero(pink_mask)>1000 and flag3==0):
         flag3=1
         print("shift-opposite")
-        Ser.write(b'fffffffffllllllllllllffffffffffffffffffffffffffrrr')
+        Ser.write(b'lllllllllllllllllllllfffffffffffffffffffffffffffffffffffffff')
         time.sleep(5)
         break
 

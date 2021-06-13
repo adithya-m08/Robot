@@ -4,12 +4,12 @@ import serial
 import time
 
 cap = cv2.VideoCapture(0)
-
+c1=0
 linecolor = (100, 215, 255)
-lwr_red = np.array([7, 245,132])
-upper_red = np.array([27, 255,212])
+lwr_red = np.array([7, 171, 132])
+upper_red = np.array([27, 255, 212])
 
-Ser = serial.Serial("COM4", baudrate=9600)
+Ser = serial.Serial("/dev/ttyACM0", baudrate=9600)
 Ser.flush()
 width=cap.get(3)
 
@@ -34,23 +34,30 @@ while True:
         if radius > 3:
             #cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
             cv2.circle(frame, center, 5, linecolor, -1)
-            
-        if(x < 0.25*width):
-            print("L")
+        
+        if(x>0 and x<=0.25*width):
+            print("LLL")
             Ser.write(b"l")
-
-        elif(x > 0.75*width):
-            print("R")
+            time.sleep(0.01)
+            
+        elif(x >0.25*width and x<=0.75*width):
+            print('F')
+            Ser.write(b'f')
+            time.sleep(0.01)
+            
+        elif(x >0.75*width and x<=width):
+            print("RRR")
             Ser.write(b"r")
-
-        else:
-            print("F")
-            Ser.write(b"f")
+            time.sleep(0.01)
     else:
         print("Track Not Visible")
-
+        c1+=1
+        if(c1==5):
+            Ser.write(b'b')
+            c1=0
+        
     cv2.imshow("Frame", frame)
-    if cv2.waitKey(10) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         cap.release()
         Ser.close()
         cv2.destroyAllWindows()
